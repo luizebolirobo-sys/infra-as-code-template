@@ -1,0 +1,21 @@
+# .github/workflows/provision.yml
+name: Provision Infrastructure
+
+on:
+  workflow_dispatch:  # ✅ OBRIGATÓRIO para disparo via API
+    inputs:
+      payload:
+        description: 'Payload de provisionamento'
+        required: true
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Processar Payload
+        run: |
+          echo "Payload recebido: ${{ github.event.inputs.payload }}"
+          # Sua lógica de provisionamento aqui
