@@ -1,21 +1,250 @@
-# .github/workflows/provision.yml
-name: Provision Infrastructure
+name: IDP Infrastructure Provisioning
 
 on:
-  workflow_dispatch:  # ✅ OBRIGATÓRIO para disparo via API
+  workflow_dispatch:
     inputs:
       payload:
-        description: 'Payload de provisionamento'
+        description: 'JSON payload enviado pelo IDP Portal'
         required: true
+        type: string
+
+permissions:
+  contents: write    # necessário para commitar o infra-state.json
+  actions: read
 
 jobs:
-  provision:
+  validate:
+    name: Validate Payload
     runs-on: ubuntu-latest
+    outputs:
+      provider: ${{ steps.parse.outputs.provider }}
+      resources: ${{ steps.parse.outputs.resources }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Processar Payload
+      - name: Parse and validate payload
+        id: parse
         run: |
-          echo "Payload recebido: ${{ github.event.inputs.payload }}"
-          # Sua lógica de provisionamento aqui
+          echo '${{ inputs.payload }}' > /tmp/payload.json
+          
+          # Valida JSON
+          python3 -c "import json, sys; json.load(open('/tmp/payload.json'))" || {
+            echo "ERRO: Payload JSON inválido"
+            exit 1
+          }
+          
+          PROVIDER=$(jq -r '.provider' /tmp/payload.json)
+          RESOURCES=$(jq -r '.resources | length' /tmp/payload.json)
+          
+          echo "provider=$PROVIDER" >> $GITHUB_OUTPUT
+          echo "resources=$RESOURCES" >> $GITHUB_OUTPUT
+          
+          echo "✓ Payload válido: $RESOURCES recurso(s) para $PROVIDER"
+
+  provision:
+    name: Provision Infrastructure
+    runs-on: ubuntu-latest
+    needs: validate
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_PAT }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.7.0'
+
+      - name: Parse payload
+        id: payload
+        run: |
+          echo '${{ inputs.payload }}' > /tmp/payload.json
+          
+          PROVIDER=$(jq -r '.provider' /tmp/payload.json)
+          ENVIRONMENT=$(jq -r '.environment' /tmp/payload.json)
+          TIMESTAMP=$(jq -r '.timestamp' /tmp/payload.json)
+          
+          echo "provider=$PROVIDER" >> $GITHUB_OUTPUT
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+
+      # ── Azure ───────────────────────────────────────────────────────────────
+      - name: Azure Login
+        if: steps.payload.outputs.provider == 'azure'
+        uses: azure/login@v2
+        with:
+          creds: |
+            {
+              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
+            }
+
+      # ── AWS ─────────────────────────────────────────────────────────────────
+      - name: Configure AWS Credentials
+        if: steps.payload.outputs.provider == 'aws'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # ── OCI ─────────────────────────────────────────────────────────────────
+      - name: Configure OCI Credentials
+        if: steps.payload.outputs.provider == 'oci'
+        run: |
+          mkdir -p ~/.oci
+          echo "${{ secrets.OCI_PRIVATE_KEY }}" > ~/.oci/oci_api_key.pem
+          chmod 600 ~/.oci/oci_api_key.pem
+          cat > ~/.oci/config <<EOF
+          [DEFAULT]
+          user=${{ secrets.OCI_USER_OCID }}
+          fingerprint=${{ secrets.OCI_FINGERPRINT }}
+          tenancy=${{ secrets.OCI_TENANCY_OCID }}
+          region=sa-saopaulo-1
+          key_file=~/.oci/oci_api_key.pem
+          EOF
+
+      # ── Terraform ───────────────────────────────────────────────────────────
+      - name: Generate Terraform variables
+        run: |
+          python3 - <<'PYEOF'
+          import json, os
+
+          with open('/tmp/payload.json') as f:
+              payload = json.load(f)
+
+          provider = payload['provider']
+          resources = payload['resources']
+
+          # Gera terraform.tfvars.json
+          tfvars = {
+              'provider': provider,
+              'environment': payload.get('environment', 'production'),
+              'resources': resources
+          }
+
+          with open('terraform/terraform.tfvars.json', 'w') as f:
+              json.dump(tfvars, f, indent=2)
+
+          print(f"✓ Gerado terraform.tfvars.json com {len(resources)} recurso(s)")
+          PYEOF
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init -backend-config="conn_str=${{ secrets.TF_STATE_BACKEND }}"
+
+      - name: Terraform Validate
+        working-directory: terraform
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: terraform
+        run: terraform plan -var-file=terraform.tfvars.json -out=tfplan
+        id: plan
+
+      - name: Terraform Apply
+        working-directory: terraform
+        run: terraform apply -auto-approve tfplan
+
+      # ── Emite log no formato esperado pelo IDP para extração de recursos ───
+      - name: Emit IDP resource markers
+        run: |
+          echo '${{ inputs.payload }}' > /tmp/payload.json
+          PROVIDER=$(jq -r '.provider' /tmp/payload.json)
+
+          jq -c '.resources[]' /tmp/payload.json | while read resource; do
+            RTYPE=$(echo "$resource" | jq -r '.technology' | tr '[:upper:]' '[:lower:]')
+            RNAME=$(echo "$resource" | jq -r '.configs.clusterName // .configs.vmName // .configs.instanceName // .configs.dbName // .configs.name // .resource')
+            REGION=$(echo "$resource" | jq -r '.configs.region // "us-east-1"')
+            
+            # Normaliza tipo
+            case "$RTYPE" in
+              containers|kubernetes) RTYPE="kubernetes" ;;
+              compute)               RTYPE="vm" ;;
+              storage)               RTYPE="storage" ;;
+              "banco de dados")      RTYPE="database" ;;
+            esac
+
+            # Formato lido por readRunLogs() no githubService.ts
+            echo "[IDP-RESOURCE] type=$RTYPE name=$RNAME provider=$PROVIDER region=$REGION"
+          done
+
+      # ── Atualiza infra-state.json (lido por readInfraState() no IDP) ───────
+      - name: Update infra-state.json
+        run: |
+          python3 - <<'PYEOF'
+          import json, os
+          from datetime import datetime
+
+          with open('/tmp/payload.json') as f:
+              payload = json.load(f)
+
+          provider = payload['provider']
+          run_id   = os.environ.get('GITHUB_RUN_ID', '0')
+
+          # Mapeamento technology → tipo normalizado
+          type_map = {
+            'containers': 'kubernetes', 'kubernetes': 'kubernetes',
+            'compute': 'vm', 'vm': 'vm',
+            'storage': 'storage',
+            'banco de dados': 'database', 'database': 'database',
+          }
+
+          resources = []
+          for r in payload.get('resources', []):
+            tech = r.get('technology', r.get('resource', '')).lower()
+            rtype = type_map.get(tech, 'unknown')
+            configs = r.get('configs', {})
+            name = (configs.get('clusterName') or configs.get('vmName') or
+                    configs.get('instanceName') or configs.get('dbName') or
+                    configs.get('name') or r.get('resource', 'resource'))
+            region = configs.get('region', 'us-east-1')
+            resources.append({
+              'type': rtype,
+              'name': name,
+              'provider': provider,
+              'region': region,
+              'configs': configs,
+            })
+
+          state = {
+            'lastUpdated': datetime.utcnow().isoformat() + 'Z',
+            'runId': int(run_id),
+            'resources': resources,
+          }
+
+          with open('infra-state.json', 'w') as f:
+            json.dump(state, f, indent=2, ensure_ascii=False)
+
+          print(f"✓ infra-state.json atualizado com {len(resources)} recurso(s)")
+          PYEOF
+
+      - name: Commit infra-state.json
+        run: |
+          git config user.name  "idp-bot"
+          git config user.email "idp-bot@noreply.github.com"
+          git add infra-state.json
+          git diff --staged --quiet || \
+            git commit -m "chore: update infra-state [run=${{ github.run_id }}]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+
+  notify:
+    name: Notify Result
+    runs-on: ubuntu-latest
+    needs: provision
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          if [ "${{ needs.provision.result }}" == "success" ]; then
+            echo "## ✅ Provisionamento Concluído" >> $GITHUB_STEP_SUMMARY
+            echo "**Status:** Sucesso" >> $GITHUB_STEP_SUMMARY
+            echo "**Run:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Falha no Provisionamento" >> $GITHUB_STEP_SUMMARY
+            echo "**Status:** ${{ needs.provision.result }}" >> $GITHUB_STEP_SUMMARY
+          fi
