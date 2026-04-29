@@ -11,7 +11,7 @@
       "color": "#0078D4",
       "abbr": "AZ",
       "sla": "99.99%",
-      "regions": 60,
+      "regions": 70,
       "features": ["Active Directory", "Hybrid Cloud", "DevOps", "AI Services"],
       "resources": ["kubernetes", "vm", "storage-account", "sql-database"]
     },
