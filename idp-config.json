@@ -201,57 +201,6 @@
                   }
                ]
             }
-            {
-               "id":"MongoDB",
-               "name":"MongoDB Database",
-               "description":"Banco de dados MongoDB",
-               "icon":"Database",
-               "enabled":true,
-               "fields":[
-                  {
-                     "name":"dbName",
-                     "label":"Nome do Banco",
-                     "type":"text",
-                     "required":true,
-                     "placeholder":"ex: db-prod-01"
-                  },
-                  {
-                     "name":"region",
-                     "label":"Região",
-                     "type":"select",
-                     "required":true,
-                     "options":[
-                        "eastus",
-                        "brazilsouth",
-                        "westeurope"
-                     ]
-                  },
-                  {
-                     "name":"tier",
-                     "label":"Tier",
-                     "type":"select",
-                     "required":true,
-                     "options":[
-                        "Basic",
-                        "Standard",
-                        "Premium"
-                     ]
-                  },
-                  {
-                     "name":"capacity",
-                     "label":"Capacidade (DTU)",
-                     "type":"select",
-                     "required":true,
-                     "options":[
-                        "10",
-                        "20",
-                        "50",
-                        "100",
-                        "200"
-                     ]
-                  }
-               ]
-            }
          ]
       },
       {
