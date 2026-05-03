@@ -45,16 +45,6 @@ jobs:
     needs: validate
     environment: production
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_PAT }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: '1.7.0'
-
       - name: Parse payload
         id: payload
         run: |
