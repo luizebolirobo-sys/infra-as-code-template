@@ -1,3 +1,595 @@
+{
+   "version":"1.0.2",
+   "providers":[
+      {
+         "id":"azure",
+         "name":"Microsoft Azure",
+         "description":"Plataforma enterprise com integração Active Directory",
+         "color":"#0078D4",
+         "abbr":"AZ",
+         "features":[
+            "Active Directory",
+            "Hybrid Cloud",
+            "DevOps"
+         ],
+         "sla":"99.99%",
+         "regions":60,
+         "enabled":true,
+         "resources":[
+            {
+               "id":"kubernetes",
+               "name":"Kubernetes Cluster",
+               "description":"Cluster K8s gerenciado com AKS",
+               "icon":"Cloud",
+               "enabled":true,
+               "fields":[
+                  {
+                     "name":"clusterName",
+                     "label":"Nome do Cluster",
+                     "type":"text",
+                     "required":true,
+                     "placeholder":"ex: prod-aks-01"
+                  },
+                  {
+                     "name":"region",
+                     "label":"Região",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "eastus",
+                        "brazilsouth",
+                        "westeurope"
+                     ]
+                  },
+                  {
+                     "name":"nodeCount",
+                     "label":"Número de Nós",
+                     "type":"number",
+                     "required":true,
+                     "default":"3",
+                     "min":1,
+                     "max":100
+                  },
+                  {
+                     "name":"vmSize",
+                     "label":"Tamanho da VM",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "Standard_DS2_v2",
+                        "Standard_DS3_v2",
+                        "Standard_DS4_v2"
+                     ]
+                  }
+               ]
+            },
+            {
+               "id":"vm",
+               "name":"Virtual Machine",
+               "description":"VM Windows ou Linux sob demanda",
+               "icon":"Computer",
+               "enabled":true,
+               "fields":[
+                  {
+                     "name":"vmName",
+                     "label":"Nome da VM",
+                     "type":"text",
+                     "required":true,
+                     "placeholder":"ex: vm-app-01"
+                  },
+                  {
+                     "name":"os",
+                     "label":"Sistema Operacional",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "Ubuntu 22.04",
+                        "Windows Server 2022",
+                        "RHEL 8"
+                     ]
+                  },
+                  {
+                     "name":"size",
+                     "label":"Tamanho",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "Standard_B2s",
+                        "Standard_D2s_v3",
+                        "Standard_D4s_v3"
+                     ]
+                  },
+                  {
+                     "name":"region",
+                     "label":"Região",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "eastus",
+                        "brazilsouth",
+                        "westeurope"
+                     ]
+                  }
+               ]
+            },
+            {
+               "id":"storage",
+               "name":"Storage Account",
+               "description":"Armazenamento de blobs e arquivos",
+               "icon":"Storage",
+               "enabled":true,
+               "fields":[
+                  {
+                     "name":"storageName",
+                     "label":"Nome do Storage",
+                     "type":"text",
+                     "required":true,
+                     "placeholder":"ex: stgprod01"
+                  },
+                  {
+                     "name":"region",
+                     "label":"Região",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "eastus",
+                        "brazilsouth",
+                        "westeurope"
+                     ]
+                  },
+                  {
+                     "name":"redundancy",
+                     "label":"Redundância",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "LRS",
+                        "GRS",
+                        "ZRS"
+                     ]
+                  }
+               ]
+            },
+            {
+               "id":"database",
+               "name":"Azure SQL Database",
+               "description":"Banco de dados relacional gerenciado",
+               "icon":"Database",
+               "enabled":true,
+               "fields":[
+                  {
+                     "name":"dbName",
+                     "label":"Nome do Banco",
+                     "type":"text",
+                     "required":true,
+                     "placeholder":"ex: db-prod-01"
+                  },
+                  {
+                     "name":"region",
+                     "label":"Região",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "eastus",
+                        "brazilsouth",
+                        "westeurope"
+                     ]
+                  },
+                  {
+                     "name":"tier",
+                     "label":"Tier",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "Basic",
+                        "Standard",
+                        "Premium"
+                     ]
+                  },
+                  {
+                     "name":"capacity",
+                     "label":"Capacidade (DTU)",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "10",
+                        "20",
+                        "50",
+                        "100",
+                        "200"
+                     ]
+                  }
+               ]
+            }{
+               "id":"MongoDB",
+               "name":"MongoDB Database",
+               "description":"Banco de dados MongoDB",
+               "icon":"Database",
+               "enabled":true,
+               "fields":[
+                  {
+                     "name":"dbName",
+                     "label":"Nome do Banco",
+                     "type":"text",
+                     "required":true,
+                     "placeholder":"ex: db-prod-01"
+                  },
+                  {
+                     "name":"region",
+                     "label":"Região",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "eastus",
+                        "brazilsouth",
+                        "westeurope"
+                     ]
+                  },
+                  {
+                     "name":"tier",
+                     "label":"Tier",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "Basic",
+                        "Standard",
+                        "Premium"
+                     ]
+                  },
+                  {
+                     "name":"capacity",
+                     "label":"Capacidade (DTU)",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "10",
+                        "20",
+                        "50",
+                        "100",
+                        "200"
+                     ]
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "id":"aws",
+         "name":"Amazon Web Services",
+         "description":"Maior ecossistema cloud com 200+ serviços",
+         "color":"#FF9900",
+         "abbr":"AWS",
+         "features":[
+            "Lambda",
+            "EKS",
+            "RDS",
+            "S3"
+         ],
+         "sla":"99.95%",
+         "regions":31,
+         "enabled":true,
+         "resources":[
+            {
+               "id":"kubernetes",
+               "name":"EKS Cluster",
+               "description":"Kubernetes gerenciado pela AWS",
+               "icon":"Cloud",
+               "enabled":true,
+               "fields":[
+                  {
+                     "name":"clusterName",
+                     "label":"Nome do Cluster",
+                     "type":"text",
+                     "required":true,
+                     "placeholder":"ex: prod-eks-01"
+                  },
+                  {
+                     "name":"region",
+                     "label":"Região",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "us-east-1",
+                        "sa-east-1",
+                        "eu-west-1"
+                     ]
+                  },
+                  {
+                     "name":"nodeCount",
+                     "label":"Número de Nós",
+                     "type":"number",
+                     "required":true,
+                     "default":"3",
+                     "min":1,
+                     "max":100
+                  },
+                  {
+                     "name":"instanceType",
+                     "label":"Tipo de Instância",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "t3.medium",
+                        "t3.large",
+                        "m5.large",
+                        "m5.xlarge"
+                     ]
+                  }
+               ]
+            },
+            {
+               "id":"vm",
+               "name":"EC2 Instance",
+               "description":"Servidor virtual escalável",
+               "icon":"Computer",
+               "enabled":true,
+               "fields":[
+                  {
+                     "name":"instanceName",
+                     "label":"Nome da Instância",
+                     "type":"text",
+                     "required":true,
+                     "placeholder":"ex: ec2-app-01"
+                  },
+                  {
+                     "name":"ami",
+                     "label":"AMI",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "Amazon Linux 2",
+                        "Ubuntu 22.04",
+                        "Windows Server 2022"
+                     ]
+                  },
+                  {
+                     "name":"instanceType",
+                     "label":"Tipo",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "t2.micro",
+                        "t2.small",
+                        "t2.medium",
+                        "m5.large"
+                     ]
+                  },
+                  {
+                     "name":"region",
+                     "label":"Região",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "us-east-1",
+                        "sa-east-1",
+                        "eu-west-1"
+                     ]
+                  }
+               ]
+            },
+            {
+               "id":"storage",
+               "name":"S3 Bucket",
+               "description":"Armazenamento de objetos escalável",
+               "icon":"Storage",
+               "enabled":true,
+               "fields":[
+                  {
+                     "name":"bucketName",
+                     "label":"Nome do Bucket",
+                     "type":"text",
+                     "required":true,
+                     "placeholder":"ex: my-app-bucket-01"
+                  },
+                  {
+                     "name":"region",
+                     "label":"Região",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "us-east-1",
+                        "sa-east-1",
+                        "eu-west-1"
+                     ]
+                  },
+                  {
+                     "name":"versioning",
+                     "label":"Versionamento",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "Enabled",
+                        "Disabled"
+                     ]
+                  }
+               ]
+            },
+            {
+               "id":"database",
+               "name":"RDS Database",
+               "description":"Banco de dados relacional gerenciado",
+               "icon":"Database",
+               "enabled":true,
+               "fields":[
+                  {
+                     "name":"dbName",
+                     "label":"Nome do Banco",
+                     "type":"text",
+                     "required":true,
+                     "placeholder":"ex: db-prod-01"
+                  },
+                  {
+                     "name":"engine",
+                     "label":"Motor",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "MySQL",
+                        "PostgreSQL",
+                        "MariaDB",
+                        "Oracle"
+                     ]
+                  },
+                  {
+                     "name":"instanceClass",
+                     "label":"Classe",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "db.t2.micro",
+                        "db.t2.small",
+                        "db.t2.medium",
+                        "db.m5.large"
+                     ]
+                  },
+                  {
+                     "name":"region",
+                     "label":"Região",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "us-east-1",
+                        "sa-east-1",
+                        "eu-west-1"
+                     ]
+                  }
+               ]
+            }
+         ]
+      },
+      {
+         "id":"oci",
+         "name":"Oracle Cloud Infrastructure",
+         "description":"Alta performance para workloads críticos",
+         "color":"#C74634",
+         "abbr":"OCI",
+         "features":[
+            "Autonomous DB",
+            "Exadata",
+            "HPC"
+         ],
+         "sla":"99.95%",
+         "regions":44,
+         "enabled":true,
+         "resources":[
+            {
+               "id":"kubernetes",
+               "name":"OKE Cluster",
+               "description":"Kubernetes Engine gerenciado",
+               "icon":"Cloud",
+               "enabled":true,
+               "fields":[
+                  {
+                     "name":"clusterName",
+                     "label":"Nome do Cluster",
+                     "type":"text",
+                     "required":true,
+                     "placeholder":"ex: prod-oke-01"
+                  },
+                  {
+                     "name":"region",
+                     "label":"Região",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "us-ashburn-1",
+                        "sa-saopaulo-1",
+                        "eu-frankfurt-1"
+                     ]
+                  },
+                  {
+                     "name":"nodeCount",
+                     "label":"Número de Nós",
+                     "type":"number",
+                     "required":true,
+                     "default":"3",
+                     "min":1,
+                     "max":100
+                  },
+                  {
+                     "name":"shape",
+                     "label":"Shape",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "VM.Standard.E2.1",
+                        "VM.Standard.E2.2",
+                        "VM.Standard.E2.4"
+                     ]
+                  }
+               ]
+            },
+            {
+               "id":"vm",
+               "name":"Compute Instance",
+               "description":"Instância de computação flexível",
+               "icon":"Computer",
+               "enabled":true,
+               "fields":[
+                  {
+                     "name":"instanceName",
+                     "label":"Nome da Instância",
+                     "type":"text",
+                     "required":true,
+                     "placeholder":"ex: oci-vm-01"
+                  },
+                  {
+                     "name":"image",
+                     "label":"Imagem",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "Oracle Linux 8",
+                        "Ubuntu 22.04",
+                        "Windows Server 2022"
+                     ]
+                  },
+                  {
+                     "name":"shape",
+                     "label":"Shape",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "VM.Standard.E2.1",
+                        "VM.Standard.E2.2",
+                        "VM.Standard.E2.4"
+                     ]
+                  },
+                  {
+                     "name":"region",
+                     "label":"Região",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "us-ashburn-1",
+                        "sa-saopaulo-1",
+                        "eu-frankfurt-1"
+                     ]
+                  }
+               ]
+            },
+            {
+               "id":"database",
+               "name":"Autonomous Database",
+               "description":"Banco de dados autônomo Oracle",
+               "icon":"Database",
+               "enabled":true,
+               "fields":[
+                  {
+                     "name":"dbName",
+                     "label":"Nome do Banco",
+                     "type":"text",
+                     "required":true,
+                     "placeholder":"ex: adb_prod_01"
+                  },
+                  {
+                     "name":"dbType",
+                     "label":"Tipo",
+                     "type":"select",
+                     "required":true,
+                     "options":[
+                        "Transaction Processing",
+                        "Data Warehouse"
                      ]
                   },
                   {
