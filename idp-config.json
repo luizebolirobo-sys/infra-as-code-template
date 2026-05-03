@@ -200,7 +200,8 @@
                      ]
                   }
                ]
-            }{
+            }
+            {
                "id":"MongoDB",
                "name":"MongoDB Database",
                "description":"Banco de dados MongoDB",
